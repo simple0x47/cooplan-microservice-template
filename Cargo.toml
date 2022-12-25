@@ -11,6 +11,7 @@ edition = "2021"
 cooplan-definitions-lib = "0.1.6"
 cooplan-definition-schema-validator = "0.1.1"
 cooplan-amqp-api = "0.1.1"
+cooplan-mongodb = "0.1.0"
 
 # JSON Serialization
 serde = { version = "1.0.141", features = ["derive"] }
@@ -34,3 +35,6 @@ jsonwebtoken = "8"
 
 # AMQP
 lapin = "2.1"
+
+#MongoDB
+mongodb = "2.3.1"
