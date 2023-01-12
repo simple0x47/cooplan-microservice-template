@@ -8,9 +8,9 @@ edition = "2021"
 [dependencies]
 
 # Proprietary dependencies
-cooplan-definitions-lib = "0.1.6"
-cooplan-definition-schema-validator = "0.1.1"
-cooplan-amqp-api = "0.1.1"
+cooplan-amqp-api = "0.8.1"
+cooplan-amqp-api-shared = "0.1.0"
+cooplan-lapin-wrapper = "0.5.0"
 cooplan-mongodb = "0.1.0"
 
 # JSON Serialization
@@ -28,13 +28,12 @@ tokio-executor-trait = "2.1"
 tokio-reactor-trait = "1.1"
 
 async-channel = "1.8.0"
-async-trait = "0.1.58"
 
 # Token
-jsonwebtoken = "8"
+jsonwebtoken = "8.2.0"
 
 # AMQP
-lapin = "2.1"
+lapin = "2.1.1"
 
 #MongoDB
 mongodb = "2.3.1"
