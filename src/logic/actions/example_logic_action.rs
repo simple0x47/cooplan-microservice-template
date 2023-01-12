@@ -2,7 +2,7 @@ use crate::error::Error;
 use crate::logic::storage_request::StorageRequest;
 
 pub enum ExampleLogicAction {
-    Example {}
+    Example {},
 }
 
 pub async fn execute(
@@ -10,6 +10,6 @@ pub async fn execute(
     storage_request_sender: &async_channel::Sender<StorageRequest>,
 ) -> Result<(), Error> {
     match action {
-        ExampleLogicAction::Example {} => todo!()
+        ExampleLogicAction::Example {} => todo!(),
     }
 }

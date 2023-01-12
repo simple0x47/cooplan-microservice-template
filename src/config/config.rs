@@ -1,47 +1,19 @@
-use cooplan_amqp_api::config::api::openid_connect_config::OpenIdConnectConfig;
+use cooplan_amqp_api::config::openid_connect_config::OpenIdConnectConfig;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{Error, ErrorKind};
 
-const CONFIG_FILE: &str = "./config.json";
-
 #[derive(Serialize, Deserialize)]
 pub struct Config {
-    openid_connect: OpenIdConnectConfig,
-    logic_request_dispatch_instances: u16,
-    logic_requests_bound: usize,
-    storage_request_dispatch_instances: u16,
-    storage_requests_bound: usize,
+    pub openid_connect: OpenIdConnectConfig,
+    pub logic_request_dispatch_instances: u16,
+    pub logic_requests_bound: usize,
+    pub storage_request_dispatch_instances: u16,
+    pub storage_requests_bound: usize,
 }
 
-impl Config {
-    pub fn open_id_connect(&self) -> &OpenIdConnectConfig {
-        &self.openid_connect
-    }
-
-    pub fn move_open_id_connect(self) -> OpenIdConnectConfig {
-        self.openid_connect
-    }
-
-    pub fn logic_request_dispatch_instances(&self) -> u16 {
-        self.logic_request_dispatch_instances
-    }
-
-    pub fn logic_requests_bound(&self) -> usize {
-        self.logic_requests_bound
-    }
-
-    pub fn storage_request_dispatch_instances(&self) -> u16 {
-        self.storage_request_dispatch_instances
-    }
-
-    pub fn storage_requests_bound(&self) -> usize {
-        self.storage_requests_bound
-    }
-}
-
-pub async fn try_read_config() -> Result<Config, Error> {
-    let config = match tokio::fs::read_to_string(CONFIG_FILE).await {
+pub async fn try_read_config(config_file: &str) -> Result<Config, Error> {
+    let config = match tokio::fs::read_to_string(config_file).await {
         Ok(config) => match serde_json::from_str::<Config>(config.as_str()) {
             Ok(config) => config,
             Err(error) => {

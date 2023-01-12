@@ -1,14 +1,14 @@
-use std::io::{Error, ErrorKind};
-use std::time::Duration;
-use cooplan_amqp_api::api::initialization_package::InitializationPackage;
 use crate::logic::logic_request::LogicRequest;
 use crate::logic::storage_request::StorageRequest;
+use cooplan_amqp_api::api::initialization_package::InitializationPackage;
+use std::io::{Error, ErrorKind};
+use std::time::Duration;
 
 mod api;
+pub mod config;
+mod error;
 mod logic;
 mod storage;
-mod error;
-pub mod config;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -22,7 +22,24 @@ async fn main() -> Result<(), Error> {
         }
     }
 
-    let config = match config::config::try_read_config().await {
+    let api_file = match std::env::args().nth(1) {
+        Some(api_file) => api_file,
+        None => {
+            return Err(Error::new(ErrorKind::InvalidInput, "no api file provided"));
+        }
+    };
+
+    let config_file = match std::env::args().nth(2) {
+        Some(config_file) => config_file,
+        None => {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "no config file provided",
+            ))
+        }
+    };
+
+    let config = match config::config::try_read_config(&config_file).await {
         Ok(config) => config,
         Err(error) => {
             return Err(Error::new(
@@ -33,7 +50,7 @@ async fn main() -> Result<(), Error> {
     };
 
     let (logic_request_sender, logic_request_receiver) =
-        async_channel::bounded::<LogicRequest>(config.logic_requests_bound());
+        async_channel::bounded::<LogicRequest>(config.logic_requests_bound);
 
     let api_package =
         InitializationPackage::new(logic_request_sender, Box::new(api::registration::register));
@@ -49,14 +66,14 @@ async fn main() -> Result<(), Error> {
     }
 
     let (storage_request_sender, storage_request_receiver) =
-        async_channel::bounded::<StorageRequest>(config.storage_requests_bound());
+        async_channel::bounded::<StorageRequest>(config.storage_requests_bound);
 
     match logic::init::initialize(
-        config.logic_request_dispatch_instances(),
+        config.logic_request_dispatch_instances,
         logic_request_receiver,
         storage_request_sender,
     )
-        .await
+    .await
     {
         Ok(()) => (),
         Err(error) => {
@@ -68,10 +85,10 @@ async fn main() -> Result<(), Error> {
     }
 
     match storage::init::initialize(
-        config.storage_request_dispatch_instances(),
+        config.storage_request_dispatch_instances,
         storage_request_receiver,
     )
-        .await
+    .await
     {
         Ok(()) => (),
         Err(error) => {
