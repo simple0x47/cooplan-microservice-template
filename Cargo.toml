@@ -11,6 +11,7 @@ edition = "2021"
 cooplan-amqp-api = "0.8.1"
 cooplan-amqp-api-shared = "0.1.0"
 cooplan-lapin-wrapper = "0.5.0"
+cooplan-state-tracker = "0.2.0"
 cooplan-mongodb = "0.1.0"
 
 # JSON Serialization
