@@ -1,15 +1,21 @@
 use cooplan_amqp_api::config::openid_connect_config::OpenIdConnectConfig;
-use serde::{Deserialize, Serialize};
+use cooplan_lapin_wrapper::config::amqp_connect_config::AmqpConnectConfig;
+use cooplan_state_tracker::state_tracking_config::StateTrackingConfig;
+use serde::Deserialize;
 
 use crate::error::{Error, ErrorKind};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct Config {
     pub openid_connect: OpenIdConnectConfig,
     pub logic_request_dispatch_instances: u16,
-    pub logic_requests_bound: usize,
+    pub logic_requests_boundary: usize,
     pub storage_request_dispatch_instances: u16,
-    pub storage_requests_bound: usize,
+    pub storage_requests_boundary: usize,
+    pub output_channel_boundary: usize,
+    pub amqp_api_connect: AmqpConnectConfig,
+    pub state_tracking_config: StateTrackingConfig,
+    pub state_tracking_channel_boundary: usize,
 }
 
 pub async fn try_read_config(config_file: &str) -> Result<Config, Error> {
