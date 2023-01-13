@@ -1,6 +1,6 @@
 use crate::api::output::elements;
-use crate::error::Error;
 use cooplan_amqp_api::api::output::amqp_output_element::AmqpOutputElement;
+use cooplan_amqp_api::error::Error;
 use cooplan_lapin_wrapper::config::api::Api;
 use cooplan_state_tracker::state_tracker_client::StateTrackerClient;
 

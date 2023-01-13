@@ -4,10 +4,10 @@ use cooplan_amqp_api::api::input::input_element::InputElement;
 use cooplan_amqp_api::error::Error;
 use cooplan_lapin_wrapper::config::api::Api;
 
-pub fn register(config: &Api) -> Result<Vec<InputElement<LogicRequest>>, Error> {
+pub fn register(api: &Api) -> Result<Vec<InputElement<LogicRequest>>, Error> {
     todo!();
 
-    let elements: Vec<InputElement<LogicRequest>> = vec![elements::example::get(config)?];
+    let elements: Vec<InputElement<LogicRequest>> = vec![elements::example::get(api)?];
 
     Ok(elements)
 }

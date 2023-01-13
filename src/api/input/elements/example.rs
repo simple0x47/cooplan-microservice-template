@@ -1,3 +1,4 @@
+use crate::logic::logic_request::LogicRequest;
 use crate::logic::storage_request::StorageRequest;
 use async_channel::Sender;
 use cooplan_amqp_api::api::input::input_element::InputElement;
@@ -11,7 +12,7 @@ const ELEMENT_ID: &str = "example";
 
 const ACTIONS: &[&str] = &["get"];
 
-pub fn get(api: &Api) -> Result<InputElement<StorageRequest>, Error> {
+pub fn get(api: &Api) -> Result<InputElement<LogicRequest>, Error> {
     todo!();
 
     let api_config = match api
@@ -30,8 +31,8 @@ pub fn get(api: &Api) -> Result<InputElement<StorageRequest>, Error> {
 
     return Ok(InputElement::new(
         ELEMENT_ID.to_string(),
-        Arc::new(move |request, storage_request_sender| {
-            Box::pin(request_handler(request, storage_request_sender))
+        Arc::new(move |request, logic_request_sender| {
+            Box::pin(request_handler(request, logic_request_sender))
         }),
         ACTIONS,
         api_config.clone(),
@@ -40,7 +41,7 @@ pub fn get(api: &Api) -> Result<InputElement<StorageRequest>, Error> {
 
 async fn request_handler(
     request: Request,
-    storage_request_sender: Sender<StorageRequest>,
+    logic_request_sender: Sender<LogicRequest>,
 ) -> RequestResult {
     todo!();
 }
