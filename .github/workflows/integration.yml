@@ -1,0 +1,83 @@
+name: Integration testing
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+        cache-key:
+          required: false
+          type: string
+          default: ${{ format('integration-{0}', github.run_id) }}
+    secrets:
+      TOKEN_REQUEST_URI:
+        required: true
+      TOKEN_REQUEST:
+        required: true
+  push:
+    branches-ignore:
+      ["main"]
+  pull_request:
+    branches:
+      ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    uses: simple0x47/cooplan-microservice-template/.github/workflows/build.yml@main
+    with:
+      cache-key: ${{ inputs.cache-key }}
+  integration:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    services:
+      rabbitmq:
+        image: rabbitmq:3.11
+        ports:
+          - 5672:5672
+      mongodb:
+        image: mongo:6.0.3
+        ports:
+          - 27017:27017
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Download Build's artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ format( 'build-{0}', inputs.cache-key) }}
+        path: ./
+    - name: Decompress artifacts
+      run: unzip ${{ format( 'build-{0}.zip', inputs.cache-key) }}
+    - name: Run microservice in background
+      run: |
+        echo Current directory
+        echo $(ls)
+        mv ./cache/* ./
+        echo $(ls)
+        chmod +x cooplan-microservice-template
+        ./cooplan-microservice-template api.json config.json &
+      env:
+        MONGODB_URI: 'mongodb://localhost:27017'
+    - name: Checkout script runner
+      uses: actions/checkout@v3
+      with:
+        repository: 'simple0x47/cooplan-script-runner'
+        path: 'script_runner'
+    - name: Run integration tests
+      run: |
+        export PYTHONPATH=$(realpath ./integration_tests/)
+        TOKEN_RESPONSE=$(curl --request POST --url $TOKEN_REQUEST_URI --header 'content-type: application/json' --data $TOKEN_REQUEST)
+        TOKEN=$(echo $TOKEN_RESPONSE | jq --raw-output '.access_token')
+        mv ./script_runner/script_runner.py ./script_runner.py
+        python3 script_runner.py ./integration_tests/ $TOKEN false
+      env:
+          TOKEN_REQUEST_URI: ${{ secrets.TOKEN_REQUEST_URI }}
+          TOKEN_REQUEST: ${{ secrets.TOKEN_REQUEST }}
+          AMQP_API_CONNECTION_URI: 'amqp://guest:guest@localhost:5672'
+          TEST_TIMEOUT_AFTER_SECONDS: 15
+          TEST_MONGODB_URI: 'mongodb://localhost:27017'

@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      cache-key:
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+    
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Cache 
+        uses: Swatinem/rust-cache@v2.2.0
+        with:
+          cache-on-failure: "true"
+      - name: Build
+        run: cargo build --release --verbose
+      - name: Run unit tests
+        run: cargo test --verbose
+      - name: Prepare cache package
+        run: |
+          mkdir cache
+          
+          mv ./target/release/cooplan-microservice-template ./cache/cooplan-microservice-template
+          mv ./api.json ./cache/api.json
+          mv ./config.json ./cache/config.json
+      - name: Compress artifacts
+        run: zip -r ${{ format('build-{0}.zip', inputs.cache-key) }} ./cache/
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ format('build-{0}', inputs.cache-key) }}
+          path: ${{ format('build-{0}.zip', inputs.cache-key) }}

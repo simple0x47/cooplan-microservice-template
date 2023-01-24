@@ -1,0 +1,79 @@
+name: Continuous integration
+
+on:
+  push:
+    branches:
+      ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+  
+jobs:
+  integration:
+    uses: simple0x47/cooplan-microservice-template/.github/workflows/integration.yml@main
+    with:
+      cache-key: ${{ format('ci-{0}', github.run_id) }}
+    secrets:
+      TOKEN_REQUEST_URI: ${{ secrets.TOKEN_REQUEST_URI }}
+      TOKEN_REQUEST: ${{ secrets.TOKEN_REQUEST }}
+  release:
+    needs: integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: Download Build's artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ format('build-ci-{0}', github.run_id) }}
+        path: ./
+    - name: Delete Build's artifacts
+      uses: geekyeggo/delete-artifact@v2
+      with:
+          name: ${{ format('build-ci-{0}', github.run_id) }}
+    - name: Decompress artifacts
+      run: | 
+        unzip ${{ format('build-ci-{0}.zip', github.run_id) }}
+        mv ./cache/* ./
+    - name: Create release tag
+      id: create_release_tag
+      run: |
+        echo "tag_name=inc.$GITHUB_RUN_NUMBER" >> $GITHUB_OUTPUT
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.CUSTOM_RELEASE_TOKEN }}
+      with:
+        tag_name: ${{ steps.create_release_tag.outputs.tag_name }}
+        release_name: ${{ format('Release {0}', steps.create_release_tag.outputs.tag_name) }}
+        body: ${{ github.event.head_commit.message }}
+        draft: false
+        prerelease: false
+    - name: Upload executable
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.CUSTOM_RELEASE_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./cooplan-microservice-template
+        asset_name: cooplan-microservice-template
+        asset_content_type: application/x-elf
+    - name: Upload config.json
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.CUSTOM_RELEASE_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./config.json
+        asset_name: config.json
+        asset_content_type: application/json
+    - name: Upload api.json
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.CUSTOM_RELEASE_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./api.json
+        asset_name: api.json
+        asset_content_type: application/json
